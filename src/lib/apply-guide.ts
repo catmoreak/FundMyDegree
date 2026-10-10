@@ -30,6 +30,9 @@ const NOISE_PATTERN =
 const BOILERPLATE_PATTERN =
   /\b(get insights|advice and tips|not sure where|browse (?:our|all|more)|search for courses|find a course|compare (?:courses|universities)|create (?:a free|your free) account|download (?:our|the) (?:app|guide)|talk to (?:us|an advisor)|book a (?:free )?consultation|read more|learn more about our|view all|see more)\b/i;
 
+/** Video results belong in the Videos tab, not the application links list. */
+const VIDEO_HOST_PATTERN = /(?:youtube\.com|youtu\.be|vimeo\.com|tiktok\.com)/i;
+
 /** Keeps SerpAPI results/questions that are actually about scholarships. */
 const RELEVANCE_PATTERN =
   /\b(scholarship|grant|fellowship|bursary|financial aid|funding|appl(?:y|ication)|eligib|tuition|stipend)\b/i;
@@ -185,28 +188,19 @@ export async function buildApplyGuide(
     }
   }
 
-  // Last resort: the snippets SerpAPI returned for the "how to apply" query.
-  if (steps.length === 0) {
-    steps = dedupe(
-      googleInfo.organic
-        .map((r) => r.snippet)
-        .filter(
-          (s) =>
-            s.length > 40 &&
-            STEP_PATTERN.test(s) &&
-            RELEVANCE_PATTERN.test(s) &&
-            isUsableInstruction(s)
-        )
-    ).slice(0, 5);
-  }
-
+  // No snippet-based fallback here on purpose: search snippets produce
+  // plausible-looking but wrong "steps". An honest empty state plus the apply
+  // links, FAQ and videos below is more useful than invented instructions.
   const stepSet = new Set(steps);
 
   return {
     steps,
     requirements: requirements.filter((r) => !stepSet.has(r)),
     applyLinks: googleInfo.organic
-      .filter((r) => RELEVANCE_PATTERN.test(`${r.title} ${r.snippet}`))
+      .filter(
+        (r) =>
+          RELEVANCE_PATTERN.test(`${r.title} ${r.snippet}`) && !VIDEO_HOST_PATTERN.test(r.link)
+      )
       .slice(0, 5)
       .map((r) => ({ title: r.title, link: r.link, snippet: r.snippet })),
     relatedQuestions: googleInfo.relatedQuestions.filter((q) =>
