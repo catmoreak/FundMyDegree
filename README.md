@@ -19,6 +19,8 @@ All external data comes from [SerpAPI](https://serpapi.com) (Google Search, Goog
 Needs Node 20+ and a SerpAPI key.
 
 ```bash
+git clone the repository
+cd FundMyDegree
 npm install
 cp .env.local.example .env.local   # add your key to SERPAPI_KEY
 npm run dev
