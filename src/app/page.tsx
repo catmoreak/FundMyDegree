@@ -1,28 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { ProfileForm } from "@/components/profile-form";
+import { SiteHeader } from "@/components/site-header";
+import { SearchPanel } from "@/components/search-panel";
 import { ScholarshipResults } from "@/components/scholarship-results";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { Badge } from "@/components/ui/badge";
 import type { ScholarshipSearchResponse, StudentProfile } from "@/lib/types";
-import { GraduationCap, Newspaper, Search, ShieldCheck, SquarePlay } from "lucide-react";
+import { Newspaper, Search, ShieldCheck, SquarePlay } from "lucide-react";
 
 const PIPELINE = [
-  { icon: Search, label: "Google Search" },
-  { icon: Newspaper, label: "Google News deadline check" },
-  { icon: ShieldCheck, label: "Official site verified" },
-  { icon: SquarePlay, label: "YouTube guides" },
+  { icon: Search, title: "Search", detail: "Google results matched to your profile" },
+  { icon: Newspaper, title: "Cross-check", detail: "News scanned for deadline changes" },
+  { icon: ShieldCheck, title: "Verify", detail: "Official page confirmed still live" },
+  { icon: SquarePlay, title: "Guide", detail: "Apply steps, FAQs and video walkthroughs" },
 ];
 
 export default function Home() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<ScholarshipSearchResponse | null>(null);
+  const [hasSearched, setHasSearched] = useState(false);
 
   async function handleSubmit(profile: StudentProfile) {
     setLoading(true);
     setError(null);
+    setHasSearched(true);
     try {
       const res = await fetch("/api/scholarships", {
         method: "POST",
@@ -42,60 +43,53 @@ export default function Home() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4 sm:px-6">
-          <div className="flex items-center gap-2.5">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-brand text-brand-foreground">
-              <GraduationCap className="size-4.5" />
-            </span>
-            <span className="font-semibold tracking-tight">FundMyDegree</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="hidden sm:inline-flex">
-              Powered by SerpAPI
-            </Badge>
-            <ThemeToggle />
-          </div>
-        </div>
-      </header>
+      <SiteHeader />
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-10 sm:px-6">
-        <section className="mx-auto max-w-2xl text-center">
-          <h1 className="text-balance text-3xl font-semibold tracking-tight sm:text-4xl">
-            Scholarships that are{" "}
-            <span className="text-brand">still open</span>, ranked for you
-          </h1>
-          <p className="mx-auto mt-3 max-w-xl text-pretty text-sm text-muted-foreground sm:text-base">
-            We search the web for scholarships matching your profile, cross-check the news for
-            extended or closed deadlines, verify the official page is live, then show you exactly
-            how to apply.
-          </p>
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-2">
-            {PIPELINE.map(({ icon: Icon, label }) => (
-              <span
-                key={label}
-                className="inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs text-muted-foreground"
-              >
-                <Icon className="size-3.5 text-brand" />
-                {label}
-              </span>
-            ))}
+      <main className="mx-auto w-full max-w-5xl flex-1 px-5 sm:px-8">
+        <section className="pb-12 pt-16 sm:pt-20">
+          <div className="mx-auto max-w-xl text-center">
+            <h1 className="text-balance text-[2rem] font-semibold leading-[1.15] tracking-tight sm:text-[2.75rem]">
+              Scholarships that are{" "}
+              <span className="text-gradient-brand">still open</span>, ranked for you
+            </h1>
+            <p className="mx-auto mt-4 max-w-lg text-pretty text-[15px] leading-relaxed text-muted-foreground">
+              Scholarship listings go stale fast. We search the live web, catch deadlines that
+              moved, confirm the page still accepts applications, then show you how to apply.
+            </p>
           </div>
+
+          <div className="mx-auto mt-10 max-w-md">
+            <SearchPanel onSubmit={handleSubmit} loading={loading} hasSearched={hasSearched} />
+          </div>
+
+          <ol className="mx-auto mt-12 grid max-w-3xl grid-cols-2 gap-x-8 gap-y-7 sm:grid-cols-4">
+            {PIPELINE.map(({ icon: Icon, title, detail }) => (
+              <li key={title} className="flex flex-col gap-2.5">
+                <Icon className="size-4 text-brand" />
+                <div>
+                  <p className="text-[13px] font-medium tracking-tight">{title}</p>
+                  <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{detail}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
         </section>
 
-        <div className="mt-10 grid gap-6 lg:grid-cols-[22rem_1fr] lg:items-start">
-          <div className="lg:sticky lg:top-20">
-            <ProfileForm onSubmit={handleSubmit} loading={loading} />
-          </div>
+        <section className="pb-20">
           <ScholarshipResults loading={loading} error={error} data={data} />
-        </div>
+        </section>
       </main>
 
-      <footer className="border-t py-6">
-        <p className="mx-auto max-w-6xl px-4 text-center text-xs text-muted-foreground sm:px-6">
-          Always confirm deadlines and eligibility on the official scholarship page before
-          applying.
-        </p>
+      <footer className="border-t border-border/70 py-8">
+        <div className="mx-auto flex max-w-5xl flex-col items-center gap-1.5 px-5 text-center sm:px-8">
+          <p className="text-xs text-muted-foreground">
+            Always confirm deadlines and eligibility on the official scholarship page before
+            applying.
+          </p>
+          <p className="text-[11px] text-muted-foreground/70">
+            Google Search · Google News · YouTube data via SerpAPI
+          </p>
+        </div>
       </footer>
     </div>
   );

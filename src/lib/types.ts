@@ -11,7 +11,6 @@ export interface StudentProfile {
   degreeLevel: DegreeLevel;
   fieldOfStudy: string;
   country: string;
-  gpa?: string;
   incomeBracket: IncomeBracket;
 }
 
